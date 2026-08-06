@@ -11,6 +11,11 @@ export function useAuth() {
   const { isLoaded: userLoaded, user } = useUser();
   const { startSSOFlow } = useSSO();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const email = user?.emailAddresses?.[0]?.emailAddress;
+  const signedInWithOtherID =
+    !!userId &&
+    !!email &&
+    !/^[^\s@]+@pilani\.bits-pilani\.ac\.in$/i.test(email);
 
   const isLoading = !authLoaded || !userLoaded || isSigningIn;
 
@@ -24,6 +29,7 @@ export function useAuth() {
       });
 
       if (createdSessionId && setActive) {
+        console.log(user);
         await setActive({ session: createdSessionId });
       }
     } catch (error) {
@@ -47,5 +53,6 @@ export function useAuth() {
     user,
     signInWithGoogle,
     signOut: handleSignOut,
+    signedInWithOtherID,
   };
 }

@@ -30,6 +30,13 @@ const tokenCache = {
       return;
     }
   },
+  async deleteToken(key: string) {
+    try {
+      await SecureStore.deleteItemAsync(key);
+    } catch {
+      return;
+    }
+  },
 };
 
 export const unstable_settings = {
@@ -37,7 +44,8 @@ export const unstable_settings = {
 };
 
 function InitialLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  console.log(process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY);
+  const { isAuthenticated, isLoading, signedInWithOtherID } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -46,12 +54,19 @@ function InitialLayout() {
 
     const inAuthGroup = (segments as string[]).includes("(auth)"); //idk this was a weird bug
 
+    if (signedInWithOtherID) {
+      router.replace("/(auth)/nonbits");
+      return;
+    }
+
     if (!isAuthenticated && !inAuthGroup) {
       router.replace("/(auth)/login");
+      return;
     } else if (isAuthenticated && inAuthGroup) {
       router.replace("/(tabs)");
+      return;
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, segments, signedInWithOtherID]);
 
   if (isLoading) {
     return (
@@ -79,7 +94,7 @@ export default function RootLayout() {
   return (
     <ClerkProvider
       tokenCache={tokenCache}
-      publishableKey={process.env.CLERK_PUBLISHABLE_KEY!}
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!}
     >
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <InitialLayout />
