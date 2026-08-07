@@ -44,7 +44,6 @@ export const unstable_settings = {
 };
 
 function InitialLayout() {
-  console.log(process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY);
   const { isAuthenticated, isLoading, signedInWithOtherID } = useAuth();
   const segments = useSegments();
   const router = useRouter();

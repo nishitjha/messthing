@@ -4,7 +4,7 @@ mobile/.env
 node_modules/
 .vscode/
 .claude/
-
+services/tmp/
 # Expo
 .expo/
 dist/

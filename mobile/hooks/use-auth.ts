@@ -1,10 +1,9 @@
 import { useAuth as useClerkAuth, useSSO, useUser } from "@clerk/clerk-expo";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { useCallback, useState } from "react";
-import axios from "@/utils/axios"
+import { useCallback, useEffect, useRef, useState } from "react";
+import axios from "@/utils/axios";
 
-// i have no idea why people do this but apparently it's smoother
 WebBrowser.maybeCompleteAuthSession();
 
 export function useAuth() {
@@ -12,13 +11,33 @@ export function useAuth() {
   const { isLoaded: userLoaded, user } = useUser();
   const { startSSOFlow } = useSSO();
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const syncedUserId = useRef<string | null>(null);
+
   const email = user?.emailAddresses?.[0]?.emailAddress;
-  let signedInWithOtherID =
+  const signedInWithOtherID =
     !!userId &&
     !!email &&
     !/^[^\s@]+@pilani\.bits-pilani\.ac\.in$/i.test(email);
 
   const isLoading = !authLoaded || !userLoaded || isSigningIn;
+
+  useEffect(() => {
+    if (!userId || !user || signedInWithOtherID) return;
+    if (syncedUserId.current === userId) return;
+
+    syncedUserId.current = userId;
+
+    const syncUser = async () => {
+      try {
+        await axios.post("/users/", { user });
+      } catch (error) {
+        console.error("Error storing user in database:", error);
+        syncedUserId.current = null;
+      }
+    };
+
+    syncUser();
+  }, [userId, user, signedInWithOtherID]);
 
   const signInWithGoogle = useCallback(async () => {
     try {
@@ -29,22 +48,11 @@ export function useAuth() {
         redirectUrl: Linking.createURL("/callback"),
       });
 
-      console.log("Created session ID:", createdSessionId);
-      console.log(user);
-
       if (createdSessionId && setActive) {
-        // make a request to backend to store in db
-        // could've skipped this too but eh
-        const req = await axios.post("/users/", {
-          user
-        });
-        
-        const response = await req.data
-
         await setActive({ session: createdSessionId });
       }
     } catch (error) {
-      // don't bother reporting it lolol
+      console.error("sign in failed:", error);
     } finally {
       setIsSigningIn(false);
     }
@@ -52,10 +60,9 @@ export function useAuth() {
 
   const handleSignOut = useCallback(async () => {
     try {
-      signedInWithOtherID = false;
       await signOut();
     } catch (error) {
-      // don't bother reporting it lolol
+      console.error("sign out failed:", error);
     }
   }, [signOut]);
 

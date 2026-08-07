@@ -21,9 +21,11 @@ func NewRouter(deps *Deps) *gin.Engine {
 
 	users := router.Group("/users")
 	{
-		users.POST("/", func(context *gin.Context) {
-			fmt.Printf("Creating user: %v\n", context.Request.Body)
+		users.POST("/", middleware.ParseJSON(), func(context *gin.Context) {
+			jsonBody, _ := context.Get("jsonBody")
+			fmt.Printf("Creating user: %v\n", jsonBody)
 			context.JSON(201, gin.H{"message": "created", "success": true})
+
 		})
 
 		user := users.Group("/:userID")
