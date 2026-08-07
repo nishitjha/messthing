@@ -3,32 +3,16 @@ package main
 import (
 	"fmt"
 
-	"github.com/gin-gonic/gin"
+	"github.com/nishitjha/messthing/services/router"
 )
 
-type JSONresponse struct {
-	Message   string
-	RequestID string `json:",omitempty"`
-}
+func main() {
+	deps := &router.Deps{}
 
-func Listen() error {
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.Default()
-
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, JSONresponse{Message: "hey"})
-	})
+	router := router.NewRouter(deps)
 
 	fmt.Println("Listening on port 8080...")
-
-	err := router.Run(":8080")
-	return err
-}
-
-func main() {
-	err := Listen()
-	if err != nil {
+	if err := router.Run(":8080"); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
-
 }
