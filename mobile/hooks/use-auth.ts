@@ -29,7 +29,9 @@ export function useAuth() {
 
     const syncUser = async () => {
       try {
-        await axios.post("/users/", { user });
+        await axios.post("/users/", { 
+id: userId, email: email, name: user.fullName
+         });
       } catch (error) {
         console.error("Error storing user in database:", error);
         syncedUserId.current = null;
