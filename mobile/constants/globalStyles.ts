@@ -22,4 +22,10 @@ export const globalStyles = {
     marginTop: 8,
     backgroundColor: Colors.dark.background,
   },
+  Subtitle: {
+    fontSize: 16,
+    color: "#A0A0A0",
+    marginTop: 12,
+    marginBottom: 12,
+  },
 };

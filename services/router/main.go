@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nishitjha/messthing/services/middleware"
 )
@@ -25,7 +26,18 @@ func NewRouter(deps *Deps) *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.GET("/menu", func(context *gin.Context) {
+			rows, err := deps.DB.Query(context.Request.Context(), "SELECT day, date, breakfast, lunch, dinner FROM menu")
 
+			menu, err := pgx.CollectRows(rows, pgx.RowToMap)
+
+			if err != nil {
+				context.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch menu", "success": false})
+				fmt.Printf("failed to fetch menu: %v\n", err)
+				return
+			}
+
+			defer rows.Close()
+			context.JSON(http.StatusOK, gin.H{"message": "menu fetched", "success": true, "menu": menu})
 		})
 	}
 	users := router.Group("/users")

@@ -10,7 +10,6 @@ import (
 
 func Connect(ctx context.Context) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
-	fmt.Println(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect: %w", err)
 	}

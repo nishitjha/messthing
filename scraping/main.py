@@ -62,9 +62,9 @@ def saveDB(results):
     for day_name, menu in results.items():
         cur.execute(
             """
-            INSERT INTO menu (day_of_week, date, breakfast, lunch, dinner)
+            INSERT INTO menu (day, date, breakfast, lunch, dinner)
             VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (day_of_week)
+            ON CONFLICT (day)
             DO UPDATE SET date = EXCLUDED.date,
                           breakfast = EXCLUDED.breakfast,
                           lunch = EXCLUDED.lunch,
