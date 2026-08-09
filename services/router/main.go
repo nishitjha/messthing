@@ -22,6 +22,12 @@ func NewRouter(deps *Deps) *gin.Engine {
 		context.JSON(200, gin.H{"message": "yo", "success": true})
 	})
 
+	api := router.Group("/api")
+	{
+		api.GET("/menu", func(context *gin.Context) {
+
+		})
+	}
 	users := router.Group("/users")
 	{
 		users.POST("/", middleware.ParseJSON(), func(context *gin.Context) {

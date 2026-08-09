@@ -47,6 +47,7 @@ function InitialLayout() {
   const { isAuthenticated, isLoading, signedInWithOtherID } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const isDarkMode = useColorScheme() === "dark";
 
   useEffect(() => {
     if (isLoading) return;
@@ -69,8 +70,8 @@ function InitialLayout() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#4285F4" />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? "#151718" : "#fdfeff" }}>
+        <ActivityIndicator size="large" color={isDarkMode ? "#fdfeff" : "#151718"} />
       </View>
     );
   }

@@ -49,7 +49,7 @@ export default function NonBitsScreen() {
         disabled={isLoading || isSigningOut}
       >
         {isLoading || isSigningOut ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="#151718" />
         ) : (
           <ThemedText style={styles.buttonText}>Return to Login</ThemedText>
         )}
@@ -60,7 +60,7 @@ export default function NonBitsScreen() {
 
 const styles = StyleSheet.create({
   googleButton: {
-    backgroundColor: "#4285F4",
+    backgroundColor: "#fdfeff",
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: "#ffffff",
+    color: "#151718",
     fontSize: 16,
     fontWeight: "600",
   },
