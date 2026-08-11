@@ -6,7 +6,6 @@ node_modules/
 .claude/
 services/tmp/
 services/.env
-scraping/.venv/
 scraping/.env
 # Expo
 .expo/

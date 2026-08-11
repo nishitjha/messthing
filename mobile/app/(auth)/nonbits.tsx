@@ -49,7 +49,7 @@ export default function NonBitsScreen() {
         disabled={isLoading || isSigningOut}
       >
         {isLoading || isSigningOut ? (
-          <ActivityIndicator color="#151718" />
+          <ActivityIndicator color={Colors.dark.background} />
         ) : (
           <ThemedText style={styles.buttonText}>Return to Login</ThemedText>
         )}
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: "#151718",
+    color: Colors.dark.background,
     fontSize: 16,
     fontWeight: "600",
   },

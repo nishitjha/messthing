@@ -3,17 +3,28 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 
-	"github.com/gin-contrib/cors"
+	"github.com/clerk/clerk-sdk-go/v2"
 	"github.com/nishitjha/messthing/services/db"
 	"github.com/nishitjha/messthing/services/router"
+	"github.com/rs/cors"
 
 	"github.com/joho/godotenv"
 )
 
 func main() {
+
 	godotenv.Load()
+
+	clerkKey := os.Getenv("CLERK_SECRET_KEY")
+	if clerkKey == "" {
+		log.Fatal("CLERK_SECRET_KEY is empty")
+	}
+	clerk.SetKey(clerkKey)
+
 	ctx := context.Background()
 
 	pool, err := db.Connect(ctx)
@@ -26,15 +37,16 @@ func main() {
 	deps := &router.Deps{DB: pool}
 
 	r := router.NewRouter(deps)
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8081", "http://172.17.35.19:8081"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+
+	handler := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:8081", "http://172.17.35.19:8081"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
-	}))
+	}).Handler(r)
 
 	fmt.Println("Listening on port 8080...")
-	if err := r.Run(":8080"); err != nil {
+	if err := http.ListenAndServe(":8080", handler); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
 }

@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
 
+import { Colors } from "@/constants/theme";
 import { ClerkProvider } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
 
@@ -70,8 +71,8 @@ function InitialLayout() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? "#151718" : "#fdfeff" }}>
-        <ActivityIndicator size="large" color={isDarkMode ? "#fdfeff" : "#151718"} />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? Colors.dark.background : "#fdfeff" }}>
+        <ActivityIndicator size="large" color={isDarkMode ? "#fdfeff" : Colors.dark.background} />
       </View>
     );
   }

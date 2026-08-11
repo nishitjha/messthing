@@ -39,7 +39,7 @@ export default function LoginScreen() {
         disabled={isLoading}
       >
         {isLoading ? (
-          <ActivityIndicator color="#151718" />
+          <ActivityIndicator color={Colors.dark.background} />
         ) : (
           <ThemedText style={styles.buttonText}>
             Continue with Google
@@ -53,7 +53,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   googleButton: {
     backgroundColor: "#fdfeff",
-    color: "#151718",
+    color: Colors.dark.background,
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   buttonText: {
-    color: "#151718",
+    color: Colors.dark.background,
     fontSize: 16,
     fontWeight: "600",
   },

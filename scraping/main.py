@@ -1,9 +1,9 @@
-import json
-import re
+
 from playwright.sync_api import sync_playwright
 import os
 from dotenv import load_dotenv
 import psycopg2
+import json
 
 load_dotenv()
 
@@ -45,10 +45,12 @@ def scrape():
             date = [x.strip() for x in raw_text.strip()[:raw_text.find("Breakfast\n")].split("\n") if x.strip()][-1]
 
             results[getfull(tab)] = {
+                "day": getfull(tab),
                 "date": date,
                 "breakfast": breakfast_menu,
                 "lunch": lunch_menu,
-                "dinner": dinner_menu
+                "dinner": dinner_menu,
+                "id": [1, 2, 3] 
             }
 
         browser.close()
@@ -62,8 +64,8 @@ def saveDB(results):
     for day_name, menu in results.items():
         cur.execute(
             """
-            INSERT INTO menu (day, date, breakfast, lunch, dinner)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO menu (day, date, breakfast, lunch, dinner, id)
+            VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (day)
             DO UPDATE SET date = EXCLUDED.date,
                           breakfast = EXCLUDED.breakfast,
@@ -77,6 +79,7 @@ def saveDB(results):
                 json.dumps(menu["breakfast"]),
                 json.dumps(menu["lunch"]),
                 json.dumps(menu["dinner"]),
+                menu["id"],
             ),
         )
 

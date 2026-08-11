@@ -26,7 +26,7 @@ func NewRouter(deps *Deps) *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.GET("/menu", func(context *gin.Context) {
-			rows, err := deps.DB.Query(context.Request.Context(), "SELECT day, date, breakfast, lunch, dinner FROM menu")
+			rows, err := deps.DB.Query(context.Request.Context(), "SELECT day, date, breakfast, lunch, dinner, id FROM menu")
 
 			menu, err := pgx.CollectRows(rows, pgx.RowToMap)
 
@@ -53,6 +53,7 @@ func NewRouter(deps *Deps) *gin.Engine {
 			id, _ := jsonBody["id"].(string)
 			email, _ := jsonBody["email"].(string)
 			name, _ := jsonBody["name"].(string)
+			var eaten []string
 
 			if id == "" || email == "" {
 				context.JSON(http.StatusBadRequest, gin.H{"error": "id and email are required", "success": false})
@@ -60,9 +61,9 @@ func NewRouter(deps *Deps) *gin.Engine {
 			}
 
 			_, err := deps.DB.Exec(context.Request.Context(),
-				`INSERT INTO users (id, email, name) VALUES ($1, $2, $3)
+				`INSERT INTO users (id, email, name, eaten) VALUES ($1, $2, $3, $4)
 				 ON CONFLICT (id) DO NOTHING`,
-				id, email, name,
+				id, email, name, eaten,
 			)
 			if err != nil {
 				fmt.Printf("failed to create user: %v\n", err)
@@ -77,7 +78,33 @@ func NewRouter(deps *Deps) *gin.Engine {
 		user.Use(middleware.AuthMiddleware())
 		{
 			user.GET("/", func(context *gin.Context) {
-				context.JSON(200, gin.H{"userID": context.Param("userID"), "success": true})
+				userID := context.Param("userID")
+				row := deps.DB.QueryRow(context.Request.Context(), "SELECT id, email, name, eaten FROM users WHERE id=$1", userID)
+
+				var id, email, name string
+				var eaten []string
+
+				err := row.Scan(&id, &email, &name, &eaten)
+				if err != nil {
+					if err == pgx.ErrNoRows {
+						context.JSON(http.StatusNotFound, gin.H{"error": "user not found", "success": false})
+					} else {
+						fmt.Printf("failed to fetch user: %v\n", err)
+						context.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch user", "success": false})
+					}
+					return
+				}
+
+				context.JSON(http.StatusOK, gin.H{
+					"message": "user fetched",
+					"success": true,
+					"user": gin.H{
+						"id":    id,
+						"email": email,
+						"name":  name,
+						"eaten": eaten,
+					},
+				})
 			})
 		}
 	}
