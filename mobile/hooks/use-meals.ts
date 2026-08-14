@@ -51,8 +51,8 @@ const isSunday = today === "Sunday";
 
 const meals = [
   { name: 'breakfast', range: isSunday ? [8, 10] : [7.5, 9.5] },
-  { name: 'lunch', range: isSunday ? [12, 14] : [11.5, 13.5] },
-  { name: 'dinner', range: [19.15, 20.30] }
+  { name: 'lunch', range: isSunday ? [12, 14] : [11.5, 22.5] },
+  { name: 'dinner', range: [22.15, 23.30] }
 ];
 
 const status = meals.map(meal => {

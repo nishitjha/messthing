@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -19,7 +18,6 @@ func AuthMiddleware() gin.HandlerFunc {
 		authHeader := context.GetHeader("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
-		fmt.Println("Token:", token)
 		if token == "" {
 			if cookie, err := context.Cookie("__session"); err == nil {
 				token = cookie

@@ -6,7 +6,6 @@
     "orientation": "portrait",
     "scheme": "messthing",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -20,6 +19,7 @@
     "web": {
       "output": "static"
     },
+    
     "plugins": [
       "expo-router",
       [
@@ -32,10 +32,16 @@
             "backgroundColor": "#000000"
           }
         }
+      ],[
+        "expo-font",
+        {
+          "fonts": ["@expo-google-fonts/inter/Inter_400Regular.ttf"]
+        }
       ],
       "@clerk/expo",
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

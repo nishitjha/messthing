@@ -1,5 +1,5 @@
 import { useMeals } from '@/hooks/use-meals';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -9,235 +9,169 @@ import {
   useColorScheme,
   ActivityIndicator,
 } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { Colors } from '@/constants/theme';
-type ConfirmedMap = Record<number, boolean>;
+import { router } from 'expo-router';
+
+const ACCENT = '#C9A66B';
+const TEXT_PRIMARY = '#EDE3D3';
+const TEXT_SECONDARY = '#8C7B68';
+const TEXT_MUTED = '#6E6152';
+const PAST_OVERLAY = 'rgba(26, 21, 18, 0.5)';
+
+const MEAL_ICONS = {
+  breakfast: { Comp: Ionicons, name: 'cafe-outline' },
+  lunch: { Comp: Ionicons, name: 'restaurant-outline' },
+  dinner: { Comp: MaterialCommunityIcons, name: 'pot-steam-outline' },
+} as const;
 
 export default function MainScreen() {
-  const {meals, refreshMeals} = useMeals();
+  const { meals, refreshMeals } = useMeals();
   const isDarkMode = useColorScheme() === 'dark';
 
-  function handleConfirm(id: number) {
+  function handleConfirm(id: number) {}
+
+
+  function handleViewMenu(mealName: keyof typeof MEAL_ICONS, id: number) {
+    router.push({
+      pathname: '/menu/[meal]',
+      params: { meal: mealName, id: String(id) },
+    });
   }
 
-  function handleViewMenu(id: number) {
+
+  function renderMeal(
+    index: 0 | 1 | 2,
+    iconName: keyof typeof MEAL_ICONS,
+    label: string,
+    time: string,
+    items: string[],
+    confirmLabel: string
+  ) {
+    const status = meals!.status[index];
+    const isActive = status === 'present';
+    const isPast = status === 'past';
+    const isUpcoming = !isActive && !isPast;
+
+    if (!meals) return null;
+
+    return (
+      <View style={[styles.mealBlock, isActive && styles.mealBlockActive]}>
+        {!isActive && <View style={styles.dim} pointerEvents="none" />}
+
+        <View style={styles.mealHeaderRow}>
+          <View style={styles.mealTitleRow}>
+            {(() => {
+              const { Comp, name } = MEAL_ICONS[iconName];
+              return (
+                <Comp
+                  name={name as never}
+                  size={20}
+                  color={isActive ? ACCENT : TEXT_SECONDARY}
+                  style={styles.icon}
+                />
+              );
+            })()}
+            <Text style={[styles.mealName, isActive && styles.mealNameActive]}>
+              {label}
+            </Text>
+          </View>
+          <Text style={styles.mealTime}>{time}</Text>
+        </View>
+
+        {!isPast && (
+          <View style={styles.chipRow}>
+            {(isActive ? items : items.slice(0, 2)).map((item, i) => (
+              <View
+                key={i}
+                style={[styles.chip, isActive && styles.chipActive]}
+              >
+                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
+                  {item}
+                </Text>
+              </View>
+            ))}
+            {isUpcoming && items.length > 4 && (
+              <TouchableOpacity
+                style={styles.chip}
+                onPress={() => handleViewMenu(iconName, meals!.id[index])}
+              >
+                <Text style={styles.chipText}>
+                  +{items.length - 2} more · See menu
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+        
+        {isActive ? (
+          <View style={styles.tearLine} />
+        ) : (null
+        )}
+        {!isActive ? (
+          <>
+
+            <View style={styles.doneRow}>
+              <Text style={styles.doneText}>{isPast ? 'Past' : 'Upcoming'}</Text>
+              <Text style={styles.doneText}>Will do</Text>
+            </View>
+          </>
+        ) : (
+          
+          <View style={styles.actionRow}>
+            
+            <TouchableOpacity
+              style={[
+                styles.confirmBtn,
+                styles.confirmBtnActive,
+                meals!.eaten[index] && styles.confirmBtnDone,
+              ]}
+              onPress={() => handleConfirm(index)}
+            >
+              <Ionicons
+                name={meals!.eaten[index] ? 'checkmark' : 'add'}
+                size={24}
+                color="#17140F"
+                style={styles.confirmBtnIcon}
+              />
+              <Text style={styles.confirmBtnTextActive}>{confirmLabel}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    );
   }
 
   return (
     <>
-      {meals ? (    <View style={styles.screen}>
-      <View style={styles.card}>
-        <Text style={styles.date}>{meals.day}, {meals.date}</Text>
-        <Text style={styles.heading}>Today's meals</Text>
- 
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View
-            style={[
-              styles.mealBlock,
-              meals.status[0] === 'present' && styles.mealBlockActive,
-            ]}
-          >
-            <View style={styles.mealHeaderRow}>
-              <View style={styles.mealTitleRow}>
-                <Text style={styles.icon}>☕</Text>
-                <Text
-                  style={[
-                    styles.mealName,
-                    meals.status[0] === 'present' && { color: '#7ab8ff' },
-                  ]}
-                >
-                  Breakfast
-                </Text>
-              </View>
-              <Text style={styles.mealTime}>7:30 – 9:30 am</Text>
-            </View>
- 
-            <Text
-              style={[
-                styles.mealItems,
-                meals.status[0] === 'present' && { color: '#7ab8ff' },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {meals.breakfast.join(', ')}
+      {meals ? (
+        <View style={styles.screen}>
+          <View style={styles.card}>
+            <Text style={styles.date}>
+              {meals.day}, {meals.date}
             </Text>
- 
-            {meals.status[0] !== 'present' ? (
-              <View style={styles.doneRow}>
-                <Text style={styles.doneText}>{meals.status[0] === 'past' ? 'Past' : 'Upcoming'}</Text>
-                <Text style={styles.doneText}>Will do</Text>
-              </View>
-            ) : (
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.confirmBtn,
-                    meals.status[0] === 'present' && styles.confirmBtnActive,
-                    meals.eaten[0] && styles.confirmBtnDone,
-                  ]}
-                  onPress={() => handleConfirm(0)}
-                >
-                  <Text
-                    style={[
-                      styles.confirmBtnText,
-                      meals.status[0] === 'present' && styles.confirmBtnTextActive,
-                    ]}
-                  >
-                    {meals.eaten[0] ? '✓' : '+'} Add to cart
-                  </Text>
-                </TouchableOpacity>
- 
-                <TouchableOpacity
-                  style={styles.viewMenuBtn}
-                  onPress={() => handleViewMenu(meals.id[0])}
-                >
-                  <Text style={styles.viewMenuBtnText}>View menu</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            <Text style={styles.heading}>Today's meals</Text>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {renderMeal(0, 'breakfast', 'Breakfast', '7:30 – 9:30 am', meals.breakfast, 'Add to cart')}
+              {renderMeal(1, 'lunch', 'Lunch', '12:30 – 2:30 pm', meals.lunch, 'Add to cart')}
+              {renderMeal(2, 'dinner', 'Dinner', '7:30 – 9:30 pm', meals.dinner, 'Add to cart')}
+            </ScrollView>
           </View>
- 
-          <View
-            style={[
-              styles.mealBlock,
-              meals.status[1] === 'present' && styles.mealBlockActive,
-            ]}
-          >
-            <View style={styles.mealHeaderRow}>
-              <View style={styles.mealTitleRow}>
-                <Text style={styles.icon}>🍲</Text>
-                <Text
-                  style={[
-                    styles.mealName,
-                    meals.status[1] === 'present' && { color: '#7ab8ff' },
-                  ]}
-                >
-                  Lunch
-                </Text>
-              </View>
-              <Text style={styles.mealTime}>12:30 – 2:30 pm</Text>
-            </View>
- 
-            <Text
-              style={[
-                styles.mealItems,
-                meals.status[1] === 'present' && { color: '#7ab8ff' },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {meals.lunch.join(', ')}
-            </Text>
- 
-            {meals.status[1] !== 'present' ? (
-              <View style={styles.doneRow}>
-                <Text style={styles.doneText}>{meals.status[1] == 'past' ? 'Past' : 'Upcoming'}</Text>
-                <Text style={styles.doneText}>Will do</Text>
-              </View>
-            ) : (
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.confirmBtn,
-                    meals.status[1] === 'present' && styles.confirmBtnActive,
-                    meals.eaten[1] && styles.confirmBtnDone,
-                  ]}
-                  onPress={() => handleConfirm(1)}
-                >
-                  <Text
-                    style={[
-                      styles.confirmBtnText,
-                      meals.status[1] === 'present' && styles.confirmBtnTextActive,
-                    ]}
-                  >
-                    {meals.eaten[1] ? '✓' : '+'} Add to cart
-                  </Text>
-                </TouchableOpacity>
- 
-                <TouchableOpacity
-                  style={styles.viewMenuBtn}
-                  onPress={() => handleViewMenu(meals.id[1])}
-                >
-                  <Text style={styles.viewMenuBtnText}>View menu</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
- 
-          <View
-            style={[
-              styles.mealBlock,
-              meals.status[2] === 'present' && styles.mealBlockActive,
-            ]}
-          >
-            <View style={styles.mealHeaderRow}>
-              <View style={styles.mealTitleRow}>
-                <Text style={styles.icon}>🌙</Text>
-                <Text
-                  style={[
-                    styles.mealName,
-                    meals.status[2] === 'present' && { color: '#7ab8ff' },
-                  ]}
-                >
-                  Dinner
-                </Text>
-              </View>
-              <Text style={styles.mealTime}>7:30 – 9:30 pm</Text>
-            </View>
- 
-            <Text
-              style={[
-                styles.mealItems,
-                meals.status[2] === 'present' && { color: '#7ab8ff' },
-              ]}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {meals.dinner.join(', ')}
-            </Text>
- 
-            {meals.status[2] !== 'present' ? (
-              <View style={styles.doneRow}>
-                <Text style={styles.doneText}>{meals.status[2] === 'past' ? 'Past' : 'Upcoming'}</Text>
-                <Text style={styles.checkedInText}>Will do</Text>
-              </View>
-            ) : (
-              <View style={styles.actionRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.confirmBtn,
-                    meals.status[2] === 'present' && styles.confirmBtnActive,
-                    meals.eaten[2] && styles.confirmBtnDone,
-                  ]}
-                  onPress={() => handleConfirm(2)}
-                >
-                  <Text
-                    style={[
-                      styles.confirmBtnText,
-                      meals.status[2] === 'present' && styles.confirmBtnTextActive,
-                    ]}
-                  >
-                    {meals.eaten[2] ? '✓' : '+'} I'm eating dinner
-                  </Text>
-                </TouchableOpacity>
- 
-                <TouchableOpacity
-                  style={styles.viewMenuBtn}
-                  onPress={() => handleViewMenu(meals.id[2])}
-                >
-                  <Text style={styles.viewMenuBtnText}>View menu</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </ScrollView>
-      </View>
-    </View>
-): (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? Colors.dark.background : "#fdfeff" }}>
-                  <ActivityIndicator size="large" color={isDarkMode ? "#fdfeff" : Colors.dark.background} />
-                </View>
+        </View>
+      ) : (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: isDarkMode ? Colors.dark.background : '#fdfeff',
+          }}
+        >
+          <ActivityIndicator size="large" color={isDarkMode ? '#fdfeff' : Colors.dark.background} />
+        </View>
       )}
     </>
   );
@@ -256,16 +190,16 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   date: {
-    color: '#9a9a9a',
+    color: TEXT_SECONDARY,
     fontSize: 14,
     marginBottom: 4,
   },
   heading: {
-    color: '#fff',
+    color: TEXT_PRIMARY,
     fontSize: 30,
     fontWeight: '800',
-    marginBottom: 18,
-    marginTop: 4,
+    marginBottom: 20,
+    marginTop: 2,
   },
   mealBlock: {
     borderWidth: 1,
@@ -273,9 +207,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
+    position: 'relative',
+    overflow: 'hidden',
   },
   mealBlockActive: {
-    borderColor: Colors.dark.border
+    borderColor: ACCENT,
+  },
+  dim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: PAST_OVERLAY,
+    borderRadius: 16,
+    zIndex: 1,
   },
   mealHeaderRow: {
     flexDirection: 'row',
@@ -288,67 +234,97 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    fontSize: 18,
-    marginRight: 8,
+    marginRight: 10,
+    marginTop: 1.5
   },
   mealName: {
-    color: '#fff',
+    color: TEXT_PRIMARY,
     fontSize: 18,
     fontWeight: '700',
   },
+  mealNameActive: {
+    color: ACCENT,
+  },
   mealTime: {
-    color: '#9a9a9a',
+    color: TEXT_SECONDARY,
     fontSize: 13,
   },
-  mealItems: {
-    color: '#d0d0d0',
-    fontSize: 15,
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 12,
+    marginTop: 6
+  },
+  chip: {
+    borderWidth: 1,
+    borderColor: '#3A2E23',
+    backgroundColor: '#241D17',
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+  },
+  chipActive: {
+    borderColor: 'rgba(201, 166, 107, 0.4)',
+    backgroundColor: 'rgba(201, 166, 107, 0.12)',
+  },
+  chipText: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  chipTextActive: {
+    color: ACCENT,
+  },
+  tearLine: {
+    borderTopWidth: 1,
+    borderTopColor: '#3A2E23',
+    borderStyle: 'dashed',
+    marginTop: 4,
+    marginBottom: 14,
   },
   doneRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 8,
   },
   doneText: {
-    color: '#888',
+    color: TEXT_MUTED,
     fontSize: 14,
-  },
-  checkedInText: {
-    color: '#ccc',
-    fontSize: 14,
-    fontWeight: '600',
   },
   actionRow: {
     flexDirection: 'row',
     gap: 10,
+    marginTop:1
   },
   confirmBtn: {
     flex: 1,
+    flexDirection: 'row',
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: '#3A2E23',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   confirmBtnActive: {
-    backgroundColor: '#fff',
-    borderColor: '#fff',
+    backgroundColor: ACCENT,
+    borderColor: ACCENT,
   },
   confirmBtnDone: {
     opacity: 0.6,
   },
-  confirmBtnText: {
-    color: '#fff',
+  confirmBtnIcon: {
+    marginRight: 6,
+  },
+  confirmBtnTextActive: {
+    color: '#17140F',
     fontWeight: '700',
     fontSize: 15,
   },
-  confirmBtnTextActive: {
-    color: '#111',
-  },
   viewMenuBtn: {
     borderWidth: 1,
-    borderColor: '#444',
+    borderColor: '#3A2E23',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 16,
@@ -356,27 +332,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   viewMenuBtnText: {
-    color: '#ccc',
+    color: TEXT_SECONDARY,
     fontWeight: '700',
     fontSize: 15,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-    marginTop: 10,
-    paddingTop: 16,
-  },
-  weekLabel: {
-    color: '#9a9a9a',
-    fontSize: 13,
-  },
-  weekValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 2,
   },
 });

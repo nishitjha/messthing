@@ -8,6 +8,7 @@ import { globalStyles } from "@/constants/globalStyles";
 import { useEffect, useState } from "react";
 import axios from "@/utils/axios";
 import { Colors } from "@/constants/theme";
+import { useMeals } from "@/hooks/use-meals";
 
 type MenuItem = {
   day: string;
@@ -20,37 +21,19 @@ type MenuItem = {
 type Meal = "breakfast" | "lunch" | "dinner";
 
 export default function MealScreen() {
-  const { meal } = useLocalSearchParams<{ meal: Meal }>();
+  const { meal, id } = useLocalSearchParams<{ meal: Meal; id: string }>();
   const router = useRouter();
-  const [menu, setMenu] = useState<MenuItem | null>(null);
+
+
+  const { meals, refreshMeals } = useMeals();
   const isDarkMode = useColorScheme() === "dark";
   const theme = isDarkMode ? Colors.dark : Colors.light;
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const today = days[new Date().getDay()];
 
-  useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const response = await axios.get("/api/menu");
-
-        response.data.menu.forEach((item: MenuItem) => {
-          if (item.day === today) {
-            setMenu(item);
-          }
-        });
-      } catch (error) {
-        console.error("Error fetching menu:", error);
-      }
-    };
-
-    fetchMenu();
-  }, []);
-
-  const items = menu ? menu[meal] : [];
+  const items = meals ? meals[meal] : [];
 
   return (
     <>
-      {menu ? (
+      {meals ? (
         <View style={{ flex: 1 }}>
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
@@ -58,7 +41,7 @@ export default function MealScreen() {
             </Pressable>
             <View>
               <ThemedText style={styles.dateLabel}>
-                {menu.day}, {menu.date}
+                {meals.day}, {meals.date}
               </ThemedText>
               <ThemedText type="title" style={styles.mealTitle}>
                 {meal.charAt(0).toUpperCase() + meal.slice(1)}

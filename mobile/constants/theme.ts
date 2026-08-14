@@ -16,38 +16,41 @@ export const Colors = {
   },
   dark: {
     text: "#ECEDEE",
-    background: "#1b1b1b",
+    background: "#17140F",
     tint: tintColorDark,
     icon: "#9BA1A6",
     tabIconDefault: "#9BA1A6",
     tabIconSelected: tintColorDark,
-    subtitle: "#9BA1A6",
+    subtitle: "#8C826D",
     border: "#3a3a3a",
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: "system-ui",
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: "ui-serif",
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: "ui-rounded",
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: "ui-monospace",
+    sans: 'Inter_400Regular',
+    bold: 'Inter_700Bold',
+    serif: 'System', // iOS default serif
+    rounded: 'System', 
+    mono: 'Courier',
   },
-  default: {
-    sans: "normal",
-    serif: "serif",
-    rounded: "normal",
-    mono: "monospace",
+  android: {
+    sans: 'Inter_400Regular',
+    bold: 'Inter_700Bold',
+    serif: 'serif',
+    rounded: 'normal',
+    mono: 'monospace',
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded:
-      "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    sans: 'Inter_400Regular, Inter, system-ui, -apple-system, sans-serif',
+    bold: 'Inter_700Bold, Inter, system-ui, -apple-system, sans-serif',
+    serif: 'Georgia, serif',
+    rounded: 'sans-serif',
+    mono: 'monospace',
   },
+  default: {
+    sans: 'Inter_400Regular',
+    bold: 'Inter_700Bold',
+  }
 });
+
