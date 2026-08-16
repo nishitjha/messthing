@@ -8,9 +8,18 @@ type Menu = {
   breakfast: string[];
   lunch: string[];
   dinner: string[];
-  status:string[];
+  status: string[];
   eaten: boolean[];
   id: number[];
+};
+
+type WeekMealEntry = {
+  id: string;
+  day: string;
+  date: string;
+  mealType: "breakfast" | "lunch" | "dinner";
+  status: "logged" | "skipped";
+  items: string[];
 };
 
 export function useMeals() {
@@ -26,8 +35,12 @@ export function useMeals() {
     "Saturday",
   ];
   const today = days[new Date().getDay()];
+  const [eaten, setEaten] = useState<any[]>([]);
+  const [isItSunday, setIsItSunday] = useState(false);
+  const [mealsThisWeek, setMealsThisWeek] = useState<WeekMealEntry[]>([]);
 
   useEffect(() => {
+    setIsItSunday(today === "Sunday");
     const fetchMenu = async () => {
       try {
         const response = await axios.get("/api/menu");
@@ -45,25 +58,30 @@ export function useMeals() {
     fetchMenu();
   }, []);
 
-  async function updateStatus(menu: Menu){const now = new Date();
-const timeNum = now.getHours() + now.getMinutes() / 60;
-const isSunday = today === "Sunday";
+  useEffect(() => {
+    if (user?.id) fetchWeek();
+  }, [user?.id]);
 
-const meals = [
-  { name: 'breakfast', range: isSunday ? [8, 10] : [7.5, 9.5] },
-  { name: 'lunch', range: isSunday ? [12, 14] : [11.5, 22.5] },
-  { name: 'dinner', range: [22.15, 23.30] }
-];
+  async function updateStatus(menu: Menu) {
+    const now = new Date();
+    const timeNum = now.getHours() + now.getMinutes() / 60;
+    const isSunday = today === "Sunday";
 
-const status = meals.map(meal => {
-  if (timeNum >= meal.range[0] && timeNum < meal.range[1]) return "present";
-  if (timeNum >= meal.range[1]) return "past";
-  return "future";
-});
+    const meals = [
+      { name: 'breakfast', range: isSunday ? [8, 10] : [7.5, 9.5] },
+      { name: 'lunch', range: isSunday ? [12, 14] : [11.5, 13.5] },
+      { name: 'dinner', range: [19.15, 20.30] }
+    ];
 
-if (menu) {
-  menu.status = status;
-}
+    const status = meals.map(meal => {
+      if (timeNum >= meal.range[0] && timeNum < meal.range[1]) return "present";
+      if (timeNum >= meal.range[1]) return "past";
+      return "future";
+    });
+
+    if (menu) {
+      menu.status = status;
+    }
 
     const token = await window?.Clerk?.session?.getToken();
 
@@ -73,20 +91,25 @@ if (menu) {
       },
     });
 
-    
-    menu.id.forEach((id, index) => {
-        if (response.data.user.eaten === null) {
-            menu.eaten = [false, false, false];
-        } 
-        else if (response.data.user.eaten[id]) {
-            menu.eaten[id] = true;
-        } else {
-            menu.eaten[id] = false;
-        }
-    }
-    );
+    setEaten(response.data.user.eaten || []);
 
     setMeals(menu);
+  }
+
+  async function fetchWeek() {
+    try {
+      const token = await window?.Clerk?.session?.getToken();
+
+      const response = await axios.get(`/users/${user?.id}/week`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMealsThisWeek(response.data.week || []);
+    } catch (error) {
+      console.error("Error fetching this week's meals:", error);
+    }
   }
 
   const refreshMeals = () => {
@@ -105,7 +128,8 @@ if (menu) {
     };
 
     fetchMenu();
+    fetchWeek();
   };
 
-  return {meals, refreshMeals};
+  return { meals, refreshMeals, user, eaten, isItSunday, mealsThisWeek };
 }

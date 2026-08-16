@@ -1,5 +1,7 @@
+
+
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, useColorScheme, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ThemedText } from "@/components/themed-text";
@@ -32,12 +34,14 @@ export default function MealScreen() {
   const items = meals ? meals[meal] : [];
 
   return (
+    
     <>
+     <Stack.Screen options={{ headerShown: false }} />
       {meals ? (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background }}>
           <View style={styles.header}>
             <Pressable onPress={() => router.back()} style={styles.backButton} hitSlop={12}>
-              <Ionicons name="arrow-back" size={20} color={theme.text} />
+              <Ionicons name="arrow-back" size={20} color="#EDE3D3" />
             </Pressable>
             <View>
               <ThemedText style={styles.dateLabel}>
@@ -49,14 +53,14 @@ export default function MealScreen() {
             </View>
           </View>
 
-          <ScrollView style={globalStyles.MainContainer} contentContainerStyle={{ paddingBottom: 100 }}>
+          <ScrollView style={globalStyles.MainContainer} contentContainerStyle={{ paddingBottom: 100, marginTop: -12 }}>
             {items.map((item, index) => (
               <View
                 key={index}
                 style={[
                   styles.row,
                   index !== items.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
-                ]}
+                ]}  
               >
                 <Ionicons name="restaurant-outline" size={18} color="#A0A0A0" />
                 <ThemedText type="default" style={styles.itemText}>
@@ -65,18 +69,9 @@ export default function MealScreen() {
               </View>
             ))}
           </ScrollView>
-
-          <View style={[styles.footer, { borderTopColor: theme.border }]}>
-            <Pressable style={styles.confirmButton}>
-              <Ionicons name="checkmark" size={18} color="#fdfeff" />
-              <ThemedText style={styles.confirmButtonText}>
-                Confirm
-              </ThemedText>
-            </Pressable>
-          </View>
         </View>
       ) : (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? Colors.dark.background : "#fdfeff" }}>
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDarkMode ? Colors.dark.background : Colors.light.background }}>
           <ActivityIndicator size="large" color={isDarkMode ? "#fdfeff" : Colors.dark.background} />
         </View>
       )}
@@ -91,22 +86,24 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 16,
+    marginTop: 32,
   },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
+    marginTop: 4,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(128,128,128,0.15)",
   },
   dateLabel: {
     fontSize: 12,
-    color: "#A0A0A0",
+    color: "#8C7B68",
   },
   mealTitle: {
     marginTop: 2,
+    color: "#EDE3D3"
   },
   row: {
     flexDirection: "row",
@@ -116,29 +113,6 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 15,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  confirmButton: {
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: Colors.dark.background,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  confirmButtonText: {
-    color: "#fdfeff",
-    fontSize: 15,
-    fontWeight: "500",
+    color: "#EDE3D3"
   },
 });
