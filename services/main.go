@@ -45,8 +45,14 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(r)
 
-	fmt.Println("Listening on port " + os.Getenv("PORT") + "...")
-	if err := http.ListenAndServe(":"+os.Getenv("PORT"), handler); err != nil {
+	var port string
+	if os.Getenv("PORT") != "" {
+		port = os.Getenv("PORT")
+	} else {
+		port = "8080"
+	}
+	fmt.Println("Listening on port " + port + "...")
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
 }
