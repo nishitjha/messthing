@@ -14,12 +14,12 @@
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.nishjha.messthing"
     },
     "web": {
       "output": "static"
     },
-    
     "plugins": [
       "expo-router",
       [
@@ -32,10 +32,13 @@
             "backgroundColor": "#000000"
           }
         }
-      ],[
+      ],
+      [
         "expo-font",
         {
-          "fonts": ["@expo-google-fonts/inter/Inter_400Regular.ttf"]
+          "fonts": [
+            "@expo-google-fonts/inter/Inter_400Regular.ttf"
+          ]
         }
       ],
       "@clerk/expo",
@@ -46,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "03311f2b-7e0e-4f22-b9e3-5461f91b26f3"
+      }
     }
   }
 }

@@ -179,14 +179,14 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
 
                     {isLogged && entry.items && entry.items.length > 0 && (
                       <View style={[styles.chipRow, { marginBottom: 0 }]}>
-                        {entry.items.slice(0, 3).map((item, ii) => (
+                        {entry.items.slice(0, 2).map((item, ii) => (
                           <View key={ii} style={styles.chip}>
                             <Text style={styles.chipText}>{item}</Text>
                           </View>
                         ))}
-                        {entry.items.length > 3 && (
+                        {entry.items.length > 2 && (
                           <View style={styles.chip}>
-                            <Text style={styles.chipText}>+{entry.items.length - 3} more</Text>
+                            <Text style={styles.chipText}>+{entry.items.length - 2} more</Text>
                           </View>
                         )}
                       </View>
