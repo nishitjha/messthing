@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "scheme": "messthing",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/splashscreen_logo.png",
     "ios": {
       "supportsTablet": true
     },
