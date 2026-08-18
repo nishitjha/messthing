@@ -61,52 +61,49 @@ type PreviousMealEntry = {
   items?: string[];
 };
 
-const HARDCODED_PREVIOUS_MEALS: PreviousMealEntry[] = [
-  {
-    id: '1',
-    day: 'Today',
-    mealType: 'breakfast',
-    status: 'logged',
-    items: ['Egg bhurji', 'Bread + jam'],
-  },
-  {
-    id: '2',
-    day: 'Today',
-    mealType: 'lunch',
-    status: 'skipped',
-  },
-  {
-    id: '3',
-    day: 'Yesterday',
-    mealType: 'breakfast',
-    status: 'logged',
-    items: ['Poha', 'Tea'],
-  },
-  {
-    id: '4',
-    day: 'Yesterday',
-    mealType: 'lunch',
-    status: 'logged',
-    items: ['Dal tadka', 'Rice', 'Roti', 'Curd'],
-  },
-  {
-    id: '5',
-    day: 'Yesterday',
-    mealType: 'dinner',
-    status: 'skipped',
-  },
+const WEEKDAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
 ];
 
-function PreviousMeals() {
-  const entries = HARDCODED_PREVIOUS_MEALS;
+const MEAL_TIME_RANGES: Record<'breakfast' | 'lunch' | 'dinner', { normal: [number, number]; sunday: [number, number] }> = {
+  breakfast: { normal: [7.5, 9.5], sunday: [8, 10] },
+  lunch: { normal: [11.5, 13.5], sunday: [12, 14] },
+  dinner: { normal: [19.15, 20.30], sunday: [19.15, 20.30] },
+};
+
+function getDayLabel(day: string, todayName: string, yesterdayName: string) {
+  if (day === todayName) return 'Today';
+  if (day === yesterdayName) return 'Yesterday';
+  return day;
+}
+
+function getMealTimeStatus(mealType: 'breakfast' | 'lunch' | 'dinner', isSunday: boolean) {
+  const now = new Date();
+  const timeNum = now.getHours() + now.getMinutes() / 60;
+  const [start, end] = isSunday ? MEAL_TIME_RANGES[mealType].sunday : MEAL_TIME_RANGES[mealType].normal;
+  if (timeNum >= start && timeNum < end) return 'present';
+  if (timeNum >= end) return 'past';
+  return 'future';
+}
+
+function PreviousMeals({ meals, isItSunday }: { meals: PreviousMealEntry[]; isItSunday: boolean }) {
+  const entries = meals ?? [];
   const [expanded, setExpanded] = useState(false);
+  const todayName = WEEKDAY_NAMES[new Date().getDay()];
+  const yesterdayName = WEEKDAY_NAMES[(new Date().getDay() + 6) % 7];
 
   if (!entries || entries.length === 0) {
     return (
       <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
-        <Text style={styles.heading}>Previous meals</Text>
+        <Text style={styles.heading}>Meals this week</Text>
         <Text style={{ color: TEXT_MUTED, fontSize: 15, marginTop: -4 }}>
-          You haven't had any meals yet.
+          You haven't had any meals this week.
         </Text>
       </View>
     );
@@ -137,19 +134,22 @@ function PreviousMeals() {
   const hasMore = entries.length > rowCount && !expanded;
 
   return (
-    <View style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 64  }}>
-      <Text style={styles.headingtwo}>Previous meals</Text>
+    <View style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 64}}>
+      <Text style={styles.headingtwo}>Meals this week</Text>
 
       <View style={styles.timelineCard}>
         {visibleGroups.map((group, gi) => (
           <View key={group.day}>
             <Text style={[styles.dayLabel, gi !== 0 && styles.dayLabelSpaced]}>
-              {group.day}
+              {getDayLabel(group.day, todayName, yesterdayName)}
             </Text>
 
             {group.items.map((entry, i) => {
               const iconConfig = MEAL_ICONS[entry.mealType];
               const isLogged = entry.status === 'logged';
+              const isToday = entry.day === todayName;
+              const timeStatus = isToday ? getMealTimeStatus(entry.mealType, isItSunday) : 'past';
+              const isUpcoming = !isLogged && isToday && timeStatus !== 'past';
 
               return (
                 <View
@@ -174,17 +174,22 @@ function PreviousMeals() {
                         {entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1)}
                       </Text>
                       <Text style={isLogged ? styles.timelineLogged : styles.doneText}>
-                        {isLogged ? 'Logged' : 'Skipped'}
+                        {isLogged ? 'Logged' : isUpcoming ? 'Upcoming' : 'Skipped'}
                       </Text>
                     </View>
 
                     {isLogged && entry.items && entry.items.length > 0 && (
                       <View style={[styles.chipRow, { marginBottom: 0 }]}>
-                        {entry.items.map((item, ii) => (
+                        {entry.items.slice(0, 2).map((item, ii) => (
                           <View key={ii} style={styles.chip}>
                             <Text style={styles.chipText}>{item}</Text>
                           </View>
                         ))}
+                        {entry.items.length > 2 && (
+                          <View style={styles.chip}>
+                            <Text style={styles.chipText}>+{entry.items.length - 2} more</Text>
+                          </View>
+                        )}
                       </View>
                     )}
                   </View>
@@ -197,7 +202,7 @@ function PreviousMeals() {
 
       {hasMore && (
         <TouchableOpacity onPress={() => setExpanded(true)} style={styles.seeFullBtn}>
-          <Text style={styles.seeFullText}>See full</Text>
+          <Text style={styles.seeFullText}>See all...</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -205,17 +210,12 @@ function PreviousMeals() {
 }
 
 export default function MainScreen() {
-  const { meals, refreshMeals, eaten, isItSunday, user } = useMeals();
+  const { meals, refreshMeals, eaten, isItSunday, user, mealsThisWeek } = useMeals();
   const { getToken, signOut } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [confirmMealId, setConfirmMealId] = useState<string | null>(null);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const isDarkMode = useColorScheme() === 'dark';
-
-  async function handleLogout() {
-    setLogoutModalOpen(false);
-    await signOut();
-  }
 
   async function handleConfirm(id: string) {
     const token = await getToken();
@@ -231,6 +231,11 @@ export default function MainScreen() {
     } else {
       console.error('Error confirming meal:', response.data.message);
     }
+  }
+
+  async function handleLogout() {
+    setLogoutModalOpen(false);
+    await signOut();
   }
 
   useEffect(() => {
@@ -379,7 +384,7 @@ export default function MainScreen() {
             )}
           </View>
 
-          <PreviousMeals />
+          <PreviousMeals meals={mealsThisWeek} isItSunday={isItSunday} />
         </ScrollView>
       ) : (
         <View
@@ -468,11 +473,6 @@ const styles = StyleSheet.create({
     paddingRight: 20,
     paddingLeft: 20,
   },
-  date: {
-    color: TEXT_SECONDARY,
-    fontSize: 14,
-    marginBottom: 4,
-  },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -481,15 +481,10 @@ const styles = StyleSheet.create({
   profileBtn: {
     padding: 2,
   },
-  logoutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  logoutText: {
-    color: ACCENT,
-    fontWeight: '700',
-    fontSize: 15,
+  date: {
+    color: TEXT_SECONDARY,
+    fontSize: 14,
+    marginBottom: 4,
   },
   heading: {
     color: TEXT_PRIMARY,
@@ -498,13 +493,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 12,
   },
-
   headingtwo: {
     color: TEXT_PRIMARY,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
-    marginTop: 4,
-    marginBottom: 4,
+    marginTop: 12,
+    marginBottom: 12,
   },
   mealBlock: {
     borderWidth: 1,
@@ -517,7 +511,7 @@ const styles = StyleSheet.create({
   },
   mealBlockActive: {
     borderColor: ACCENT,
-    shadowColor: ACCENT,
+    shadowColor: Colors.dark.background,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -636,6 +630,7 @@ const styles = StyleSheet.create({
   },
   timelineCard: {
     paddingBottom: 4,
+    marginTop: -8
   },
   dayLabel: {
     color: TEXT_MUTED,
@@ -731,6 +726,16 @@ const styles = StyleSheet.create({
   },
   modalBtnYesText: {
     color: '#17140F',
+    fontWeight: '700',
+    fontSize: 15,
+  },
+  logoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  logoutText: {
+    color: ACCENT,
     fontWeight: '700',
     fontSize: 15,
   },
