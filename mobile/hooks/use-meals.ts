@@ -22,6 +22,21 @@ type WeekMealEntry = {
   items: string[];
 };
 
+function reverseByDay(week: WeekMealEntry[]): WeekMealEntry[] {
+  const dayOrder: string[] = [];
+  const grouped: Record<string, WeekMealEntry[]> = {};
+
+  week.forEach((entry) => {
+    if (!grouped[entry.day]) {
+      grouped[entry.day] = [];
+      dayOrder.push(entry.day);
+    }
+    grouped[entry.day].push(entry);
+  });
+
+  return dayOrder.reverse().flatMap((day) => grouped[day]);
+}
+
 export function useMeals() {
   const [meals, setMeals] = useState<Menu | null>(null);
   const { user } = useAuth();
@@ -106,7 +121,7 @@ export function useMeals() {
         },
       });
 
-      setMealsThisWeek(response.data.week || []);
+      setMealsThisWeek(reverseByDay(response.data.week || []));
     } catch (error) {
       console.error("Error fetching this week's meals:", error);
     }

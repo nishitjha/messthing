@@ -9,6 +9,7 @@ import {
   useColorScheme,
   ActivityIndicator,
   Modal,
+  Pressable,
 } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -96,8 +97,8 @@ const HARDCODED_PREVIOUS_MEALS: PreviousMealEntry[] = [
   },
 ];
 
-function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
-  const entries = meals ?? [];
+function PreviousMeals() {
+  const entries = HARDCODED_PREVIOUS_MEALS;
   const [expanded, setExpanded] = useState(false);
 
   if (!entries || entries.length === 0) {
@@ -105,7 +106,7 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
       <View style={{ paddingHorizontal: 20, marginTop: 8 }}>
         <Text style={styles.heading}>Previous meals</Text>
         <Text style={{ color: TEXT_MUTED, fontSize: 15, marginTop: -4 }}>
-          You haven't had any meals this week.
+          You haven't had any meals yet.
         </Text>
       </View>
     );
@@ -136,7 +137,7 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
   const hasMore = entries.length > rowCount && !expanded;
 
   return (
-    <View style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 64}}>
+    <View style={{ paddingHorizontal: 20, marginTop: 8, marginBottom: 64  }}>
       <Text style={styles.headingtwo}>Previous meals</Text>
 
       <View style={styles.timelineCard}>
@@ -179,16 +180,11 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
 
                     {isLogged && entry.items && entry.items.length > 0 && (
                       <View style={[styles.chipRow, { marginBottom: 0 }]}>
-                        {entry.items.slice(0, 2).map((item, ii) => (
+                        {entry.items.map((item, ii) => (
                           <View key={ii} style={styles.chip}>
                             <Text style={styles.chipText}>{item}</Text>
                           </View>
                         ))}
-                        {entry.items.length > 2 && (
-                          <View style={styles.chip}>
-                            <Text style={styles.chipText}>+{entry.items.length - 2} more</Text>
-                          </View>
-                        )}
                       </View>
                     )}
                   </View>
@@ -201,7 +197,7 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
 
       {hasMore && (
         <TouchableOpacity onPress={() => setExpanded(true)} style={styles.seeFullBtn}>
-          <Text style={styles.seeFullText}>See all...</Text>
+          <Text style={styles.seeFullText}>See full</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -209,11 +205,17 @@ function PreviousMeals({ meals }: { meals: PreviousMealEntry[] }) {
 }
 
 export default function MainScreen() {
-  const { meals, refreshMeals, eaten, isItSunday, user, mealsThisWeek } = useMeals();
-  const { getToken } = useAuth();
+  const { meals, refreshMeals, eaten, isItSunday, user } = useMeals();
+  const { getToken, signOut } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [confirmMealId, setConfirmMealId] = useState<string | null>(null);
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const isDarkMode = useColorScheme() === 'dark';
+
+  async function handleLogout() {
+    setLogoutModalOpen(false);
+    await signOut();
+  }
 
   async function handleConfirm(id: string) {
     const token = await getToken();
@@ -337,9 +339,14 @@ export default function MainScreen() {
       {meals ? (
         <ScrollView style={styles.screen} showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
-            <Text style={styles.date}>
-              {meals.day}, {meals.date}
-            </Text>
+            <View style={styles.topRow}>
+              <Text style={styles.date}>
+                {meals.day}, {meals.date}
+              </Text>
+              <TouchableOpacity onPress={() => setLogoutModalOpen(true)} style={styles.profileBtn}>
+                <Ionicons name="person-circle-outline" size={28} color={TEXT_SECONDARY} />
+              </TouchableOpacity>
+            </View>
             <Text style={styles.heading}>Today's meals</Text>
             <View style={{ marginTop: 8 }} />
 
@@ -372,7 +379,7 @@ export default function MainScreen() {
             )}
           </View>
 
-          <PreviousMeals meals={mealsThisWeek} />
+          <PreviousMeals />
         </ScrollView>
       ) : (
         <View
@@ -419,6 +426,25 @@ export default function MainScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={logoutModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setLogoutModalOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setLogoutModalOpen(false)}>
+          <Pressable onPress={() => {}} style={styles.accountPanel}>
+            <Text style={styles.modalTitle}>Account</Text>
+            <Text style={styles.accountSubtitle}>Logged in as {user?.emailAddresses?.[0]?.emailAddress}</Text>
+
+            <TouchableOpacity style={styles.logoutRow} onPress={handleLogout}>
+              <Ionicons name="exit-outline" size={20} color={ACCENT} style={{ marginRight: 10 }} />
+              <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }
@@ -447,6 +473,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 4,
   },
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  profileBtn: {
+    padding: 2,
+  },
+  logoutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  logoutText: {
+    color: ACCENT,
+    fontWeight: '700',
+    fontSize: 15,
+  },
   heading: {
     color: TEXT_PRIMARY,
     fontSize: 30,
@@ -454,12 +498,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: 12,
   },
+
   headingtwo: {
     color: TEXT_PRIMARY,
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: 4,
+    marginBottom: 4,
   },
   mealBlock: {
     borderWidth: 1,
@@ -472,7 +517,7 @@ const styles = StyleSheet.create({
   },
   mealBlockActive: {
     borderColor: ACCENT,
-    shadowColor: Colors.dark.background,
+    shadowColor: ACCENT,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 6,
@@ -591,7 +636,6 @@ const styles = StyleSheet.create({
   },
   timelineCard: {
     paddingBottom: 4,
-    marginTop: -8
   },
   dayLabel: {
     color: TEXT_MUTED,
@@ -638,6 +682,17 @@ const styles = StyleSheet.create({
     borderColor: '#3A2E23',
     borderRadius: 18,
     padding: 20,
+  },
+  accountPanel: {
+    width: '100%',
+    backgroundColor: '#1A1512',
+    borderRadius: 18,
+    padding: 20,
+  },
+  accountSubtitle: {
+    color: TEXT_SECONDARY,
+    fontSize: 13,
+    marginBottom: 16,
   },
   modalTitle: {
     color: TEXT_PRIMARY,

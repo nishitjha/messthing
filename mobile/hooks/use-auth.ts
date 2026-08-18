@@ -72,6 +72,7 @@ id: userId, email: email, name: user.fullName
     isLoading,
     isAuthenticated: !!userId,
     user,
+    email,
     signInWithGoogle,
     signOut: handleSignOut,
     signedInWithOtherID,
